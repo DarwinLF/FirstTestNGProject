@@ -22,6 +22,26 @@ public class LoginSection {
     public WebDriverWait wait;
     public String excelFilePath = "D:\\Github\\FirstTestNGProject\\FirstTestNGProject\\resources\\firstTestNG.xlsx";
     
+    @DataProvider(name = "loginData")
+    public Object[][] provideLoginData() throws IOException {
+        FileInputStream fis = new FileInputStream(excelFilePath);
+        Workbook workbook = new XSSFWorkbook(fis);
+        Sheet sheet = workbook.getSheetAt(0); // Assuming data is in the first sheet
+        int rowCount = sheet.getPhysicalNumberOfRows();
+        Object[][] loginData = new Object[rowCount - 1][3];
+        
+        for (int i = 1; i < rowCount; i++) { // Start from index 1 to skip header row
+            Row row = sheet.getRow(i);
+            loginData[i - 1][0] = row.getCell(0).getStringCellValue(); // Username
+            loginData[i - 1][1] = row.getCell(1).getStringCellValue(); // Password
+            loginData[i - 1][2] = row.getCell(2).getStringCellValue(); // ExpectedResult
+        }
+        
+        workbook.close();
+        fis.close();
+        return loginData;
+    }
+    
     @BeforeMethod
     public void setUp() throws IOException {
     	FirefoxOptions options = new FirefoxOptions();
@@ -31,112 +51,39 @@ public class LoginSection {
         // Load base URL and wait time from properties
         baseUrl = Util.BASE_URL;
         waitTime = Util.WAIT_TIME;
-        driver.get(baseUrl + "/V4/");
+        driver.get(baseUrl);
         wait = new WebDriverWait(driver, Duration.ofSeconds(waitTime));
     }
     
-    @Test
-    public void testValidLogin() throws IOException {
-    	
-    	String[] loginData = readLoginDataFromExcel(1);
+    @Test(dataProvider = "loginData")
+    public void testLoginSection(String username, String password, String expectedResult) {
     	
     	WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
         WebElement passwordField = driver.findElement(By.name("password"));
         WebElement loginButton = driver.findElement(By.name("btnLogin"));
     	
-    	userField.sendKeys(loginData[0]);
-    	passwordField.sendKeys(loginData[1]);
+    	userField.sendKeys(username);
+    	passwordField.sendKeys(password);
     	loginButton.click();
     	
-    	String actualTitle = driver.getTitle();
-        Assert.assertEquals(actualTitle, loginData[2]);
-    }
-    
-    @Test
-    public void testInvalidUser() throws IOException {
-    	
-    	String[] loginData = readLoginDataFromExcel(2);
-    	
-    	WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
-        WebElement passwordField = driver.findElement(By.name("password"));
-        WebElement loginButton = driver.findElement(By.name("btnLogin"));
-    	
-    	userField.sendKeys(loginData[0]);
-    	passwordField.sendKeys(loginData[1]);
-    	loginButton.click();
-    	
-    	wait.until(ExpectedConditions.alertIsPresent());
-    	
-    	Alert alert = driver.switchTo().alert();
-    	String actualText = alert.getText();
-    	
-    	alert.dismiss();
-    	
-        Assert.assertEquals(actualText, loginData[2]);
-    }
-    
-    @Test
-    public void testInvalidPassword() throws IOException {
-    	
-    	String[] loginData = readLoginDataFromExcel(3);
-    	
-    	WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
-        WebElement passwordField = driver.findElement(By.name("password"));
-        WebElement loginButton = driver.findElement(By.name("btnLogin"));
-    	
-    	userField.sendKeys(loginData[0]);
-    	passwordField.sendKeys(loginData[1]);
-    	loginButton.click();
-    	
-    	wait.until(ExpectedConditions.alertIsPresent());
-    	
-    	Alert alert = driver.switchTo().alert();
-    	String actualText = alert.getText();
-    	
-    	alert.dismiss();
-    	
-        Assert.assertEquals(actualText, loginData[2]);
-    }
-    
-    @Test
-    public void testInvalidUserAndPassword() throws IOException {
-    	
-    	String[] loginData = readLoginDataFromExcel(4);
-    	
-    	WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
-        WebElement passwordField = driver.findElement(By.name("password"));
-        WebElement loginButton = driver.findElement(By.name("btnLogin"));
-    	
-    	userField.sendKeys(loginData[0]);
-    	passwordField.sendKeys(loginData[1]);
-    	loginButton.click();
-    	
-    	wait.until(ExpectedConditions.alertIsPresent());
-    	
-    	Alert alert = driver.switchTo().alert();
-    	String actualText = alert.getText();
-    	
-    	alert.dismiss();
-    	
-        Assert.assertEquals(actualText, loginData[2]);
+    	try{ 
+    		Alert alert = driver.switchTo().alert();
+        	String actualText = alert.getText();
+        	
+        	alert.dismiss();
+        	
+            Assert.assertEquals(actualText, expectedResult);
+			
+		}    
+	    catch (NoAlertPresentException Ex){ 
+	    	String xpath = "//td[contains(text(), 'Manger Id : " + username + "')]";
+	    	WebElement welcomeMessage = driver.findElement(By.xpath(xpath));
+	        Assert.assertEquals(welcomeMessage.getText(), expectedResult);
+        } 
     }
     
     @AfterMethod
     public void tearDown() {
     	driver.quit();
-    }
-    
-    private String[] readLoginDataFromExcel(int rowIndex) throws IOException {
-        FileInputStream fis = new FileInputStream(excelFilePath);
-        Workbook workbook = new XSSFWorkbook(fis);
-        Sheet sheet = workbook.getSheetAt(0); // Assuming data is in the first sheet
-        Row row = sheet.getRow(rowIndex);
-        String[] loginData = new String[3]; // Assuming username and password
-        loginData[0] = row.getCell(0).getStringCellValue(); // Username
-        loginData[1] = row.getCell(1).getStringCellValue(); // Password
-        loginData[2] = row.getCell(2).getStringCellValue(); // ExpectedResult
-        workbook.close();
-        fis.close();
-        return loginData;
     }
 }

@@ -3,13 +3,13 @@
 <suite name="Failed suite [Default suite]" guice-stage="DEVELOPMENT">
   <test thread-count="5" name="Default test(failed)">
     <classes>
-      <class name="bankpackage.LoginSection">
+      <class name="ecommercepackage.MobileListPage">
         <methods>
-          <include name="testValidLogin"/>
-          <include name="setUp"/>
-          <include name="tearDown"/>
+          <include name="afterClass"/>
+          <include name="beforeClass"/>
+          <include name="testCreateAccountAndShareWishlist"/>
         </methods>
-      </class> <!-- bankpackage.LoginSection -->
+      </class> <!-- ecommercepackage.MobileListPage -->
     </classes>
   </test> <!-- Default test(failed) -->
 </suite> <!-- Failed suite [Default suite] -->
