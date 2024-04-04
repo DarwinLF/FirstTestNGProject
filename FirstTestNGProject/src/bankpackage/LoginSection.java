@@ -48,17 +48,20 @@ public class LoginSection {
         options.setProfile(new FirefoxProfile());
         driver = new FirefoxDriver(options);
         
+        
         // Load base URL and wait time from properties
         baseUrl = Util.BASE_URL;
         waitTime = Util.WAIT_TIME;
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(waitTime));
         driver.get(baseUrl);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(waitTime));
+        //wait = new WebDriverWait(driver, Duration.ofSeconds(waitTime));
     }
     
     @Test(dataProvider = "loginData")
     public void testLoginSection(String username, String password, String expectedResult) {
     	
-    	WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
+    	//WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("uid")));
+    	WebElement userField = driver.findElement(By.name("uid"));
         WebElement passwordField = driver.findElement(By.name("password"));
         WebElement loginButton = driver.findElement(By.name("btnLogin"));
     	
